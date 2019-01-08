@@ -1,0 +1,118 @@
+{
+    "$connections": {
+        "value": {
+            "teams": {
+                "connectionId": "/subscriptions/0a09d8e9-efeb-497b-a4fb-316312eaf36d/resourceGroups/logic-app-tutorial/providers/Microsoft.Web/connections/teams",
+                "connectionName": "teams",
+                "id": "/subscriptions/0a09d8e9-efeb-497b-a4fb-316312eaf36d/providers/Microsoft.Web/locations/northeurope/managedApis/teams"
+            }
+        }
+    },
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Condition_2": {
+                "actions": {
+                    "HTTP": {
+                        "inputs": {
+                            "method": "GET",
+                            "uri": "https://logomokitchen.fi/lounas"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                    },
+                    "ParseLunchHtml": {
+                        "inputs": {
+                            "body": "@body('HTTP')",
+                            "function": {
+                                "id": "/subscriptions/0a09d8e9-efeb-497b-a4fb-316312eaf36d/resourceGroups/logic-app-tutorial/providers/Microsoft.Web/sites/ParseLunchHtmlFunction20190107123429/functions/ParseLunchHtml"
+                            },
+                            "method": "POST"
+                        },
+                        "runAfter": {
+                            "HTTP": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Function"
+                    },
+                    "Post_message": {
+                        "inputs": {
+                            "body": {
+                                "rootMessage": {
+                                    "body": {
+                                        "content": "Lunch Bot Says: Logomo Kitchen Today<br> @{body('ParseLunchHtml')}",
+                                        "contentType": 1
+                                    }
+                                }
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['teams']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/beta/groups/@{encodeURIComponent('ae4544b4-7565-4861-8a23-cad6e8c2c17b')}/channels/@{encodeURIComponent('19:91c37b93f59b4da59bd7568c510304e7@thread.skype')}/chatThreads"
+                        },
+                        "runAfter": {
+                            "ParseLunchHtml": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    }
+                },
+                "expression": {
+                    "or": [
+                        {
+                            "equals": [
+                                "@dayOfWeek(utcNow())",
+                                0
+                            ]
+                        },
+                        {
+                            "equals": [
+                                "@dayOfWeek(utcNow())",
+                                6
+                            ]
+                        },
+                        {
+                            "equals": [
+                                1,
+                                1
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "If"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "hours": [
+                            "10"
+                        ],
+                        "minutes": [
+                            15
+                        ]
+                    },
+                    "timeZone": "FLE Standard Time"
+                },
+                "type": "Recurrence"
+            }
+        }
+    }
+}
